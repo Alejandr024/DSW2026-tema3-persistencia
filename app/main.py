@@ -1,3 +1,5 @@
+import os
+from werkzeug.utils import secure_filename
 from flask import Flask, render_template, url_for, redirect
 from app.models import db, Producto
 from app.forms import ProductoForm
@@ -9,6 +11,11 @@ app.config["SECRET_KEY"] = "una_contraseña_segura_al_azar"
 # Configuracion de la base de datos (En local= SQLite)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tienda.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+
+# Configurar la carpeta destino para las imágenes
+app.config["UPLOAD_FOLDER"] = os.path.join("app", "static", "img", "uploads")
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # Límite de 2MB por seguridad
 
 # Viculamos SQLAlchemy con nuestra aplicación de Flask
 db.init_app(app)
@@ -41,11 +48,25 @@ def crear_producto():
     form = ProductoForm()
     if form.validate_on_submit():
         # Llega con POST
+
+        # Procesar el upload de la imagen
+        if form.imagen.data:  # Chequea si se ha subido una imagen
+            archivo = form.imagen.data
+            nombre_imagen = secure_filename(archivo.filename)
+
+            # Asegurar que la ruta existe
+            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+            # Guardar el fichero
+            archivo.save(os.path.join(app.config["UPLOAD_FOLDER"], nombre_imagen))
+
         nuevo_prod = Producto(
             nombre=form.nombre.data,
             precio=form.precio.data,
             disponible=form.disponible.data,
+            imagen=nombre_imagen if form.imagen.data else None,
         )
+
         db.session.add(nuevo_prod)
         db.session.commit()
         # Patrón PRG: Redirigimos tras procesar el POST con éxito
@@ -64,10 +85,25 @@ def editar_producto(prod_id):
     form = ProductoForm(obj=producto)
 
     if form.validate_on_submit():
+        if form.imagen.data:  # Chequea si se ha subido una imagen
+            archivo = form.imagen.data
+            nombre_imagen = secure_filename(archivo.filename)
+
+            # Asegurar que la ruta existe
+            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+            # Guardar el fichero
+            archivo.save(os.path.join(app.config["UPLOAD_FOLDER"], nombre_imagen))
+            producto.imagen = nombre_imagen
+
+            """
+            REVISAR CUANDO SE QUITA LA IMAGEN EN EDITAR!!!!!!!
+            """
+
         # Modificamos directamente los atributos del objeto recuperado de la BD
         producto.nombre = form.nombre.data
         producto.precio = form.precio.data
         producto.disponible = form.disponible.data
+        # producto.imagen = nombre_imagen if form.imagen.data else None
 
         # Confirmamos los cambios en la BD
         db.session.commit()
