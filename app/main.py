@@ -97,8 +97,6 @@ def editar_producto(prod_id):
 
             # Asegurar que la ruta existe
             os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-            # Guardar el fichero
-            archivo.save(os.path.join(app.config["UPLOAD_FOLDER"], nombre_imagen))
 
             # Asegurar que la ruta existe
             os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
