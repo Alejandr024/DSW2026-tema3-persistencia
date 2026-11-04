@@ -131,13 +131,5 @@ def eliminar_producto(prod_id):
     return redirect(url_for("mostrar_catalogo"))
 
 
-@app.route("/nuevo-producto/<string:nombre>/<float:precio>")
-def nuevo_producto(nombre, precio):
-    nuevo_producto = Producto(nombre=nombre, precio=precio)
-    db.session.add(nuevo_producto)
-    db.session.commit()
-    return f"Producto agregado a la BD. Nombre: {nuevo_producto.nombre} Precio: {nuevo_producto.precio}"
-
-
 if __name__ == "__main__":
     app.run(debug=True)
