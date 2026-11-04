@@ -9,7 +9,7 @@ body {
 
 .message.exito {
   background-color: lightgreen;
-  color: rgb(202, 233, 202);
+  color: rgb(2, 31, 2);
 }
 
 .message.error {
@@ -19,5 +19,5 @@ body {
 
 .message.info {
   background-color: rgb(144, 238, 222);
-  color: rgb(16, 197, 182);
+  color: rgb(1, 20, 19);
 }
