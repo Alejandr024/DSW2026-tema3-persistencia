@@ -47,10 +47,3 @@ instance/
 .idea/
 .DS_Store
 Thumbs.db
-
-
-# =========================
-# Imagenessubidas por el usuario
-# =========================
-
-app/static/img/uploads
