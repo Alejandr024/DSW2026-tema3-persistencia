@@ -1,13 +1,27 @@
 import os
 from werkzeug.utils import secure_filename
-from flask import Flask, render_template, url_for, redirect
+from flask import (
+    Flask,
+    render_template,
+    url_for,
+    redirect,
+    request,
+    make_response,
+    session,
+    flash,
+)
 from app.models import db, Producto
 from app.forms import ProductoForm
+from datetime import timedelta
+from flask_debugtoolbar import DebugToolbarExtension
 
 
 app = Flask(__name__)
+app.debug = True
+
 app.config["SECRET_KEY"] = "una_contraseña_segura_al_azar"
 
+toolbar = DebugToolbarExtension(app)
 # Configuracion de la base de datos (En local= SQLite)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tienda.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -16,6 +30,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Configurar la carpeta destino para las imágenes
 app.config["UPLOAD_FOLDER"] = os.path.join("app", "static", "img", "uploads")
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # Límite de 2MB por seguridad
+
+# Configuración vida útil de las sesiones permanentes(2 días)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=2)
 
 # Viculamos SQLAlchemy con nuestra aplicación de Flask
 db.init_app(app)
@@ -39,7 +56,10 @@ def home():
 @app.route("/catalogo")
 def mostrar_catalogo():
     productos = Producto.query.all()
-    return render_template("catalogo.html", lista_productos=productos)
+    ultimo = request.cookies.get("ultimo_visto")
+    return render_template(
+        "catalogo.html", lista_productos=productos, ultimo_visto=ultimo
+    )
 
 
 # 2. CREATE: Mostrar formulario y guardar un nuevo producto en la BD
@@ -128,6 +148,71 @@ def eliminar_producto(prod_id):
     producto = db.get_or_404(Producto, prod_id)
     db.session.delete(producto)
     db.session.commit()
+    return redirect(url_for("mostrar_catalogo"))
+
+
+@app.route("/producto/<int:prod_id>")
+def ver_producto(prod_id):
+    producto = db.get_or_404(Producto, prod_id)
+    respuesta = make_response(
+        render_template("producto_detalle.html", producto=producto)
+    )
+    # Crea la cookie
+    respuesta.set_cookie(
+        "ultimo_visto",
+        value=producto.nombre,
+        max_age=60 * 60 * 24 * 7,
+        httponly=True,
+        samesite="Lax",
+    )
+
+    return respuesta
+
+
+@app.route("/carrito/anadir/<int:prod_id>", methods=["POST"])
+def anadir_al_carrito(prod_id):
+    # Se puede hacer esto para mostrar el nombre, pero como el esacio del carrito es pequeño (4KB) solo guardamos el id del producto, y no hace falta este codigo
+    # producto = db.get_or_404(Producto, prod_id)
+    # Activamos la persistencia para que no se borre al cerrar el navegador
+    session.permanent = True
+
+    # Si el usuario aún no tiene carrito en su sesión, inicializamos una lista vacía
+    if "carrito" not in session:
+        session["carrito"] = []
+
+    # Guardamos SOLO el ID del producto
+    session["carrito"].append(prod_id)
+
+    # IMPORTANTE: Al mutar una lista interna, avisamos a Flask para que re-firme la sesión
+    session.modified = True
+
+    # Lanzamos un mensaje de confirmación de un solo uso
+    flash("Añadido producto al carrito", "exito")
+
+    return redirect(url_for("mostrar_catalogo"))
+
+
+# 2. Ver el contenido del carrito
+@app.route("/carrito")
+def ver_carrito():
+    # Obtenemos la lista de IDs (o una lista vacía si no hay carrito)
+    ids_carrito = session.get("carrito", [])
+
+    # Consultamos en la base de datos los productos cuyos IDs estén en la lista
+    if ids_carrito:
+        productos_carrito = Producto.query.filter(Producto.id.in_(ids_carrito)).all()
+    else:
+        productos_carrito = []
+
+    return render_template("carrito.html", productos=productos_carrito)
+
+
+# 3. Vaciar el carrito (vía POST)
+@app.route("/carrito/vaciar", methods=["POST"])
+def vaciar_carrito():
+    # Eliminamos únicamente la clave 'carrito' de la sesión
+    session.pop("carrito", None)
+    flash("Has vaciado tu carrito de la compra.", "info")
     return redirect(url_for("mostrar_catalogo"))
 
 
