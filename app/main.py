@@ -13,10 +13,15 @@ from flask import (
 from app.models import db, Producto
 from app.forms import ProductoForm
 from datetime import timedelta
+from flask_debugtoolbar import DebugToolbarExtension
+
 
 app = Flask(__name__)
+app.debug = True
+
 app.config["SECRET_KEY"] = "una_contraseña_segura_al_azar"
 
+toolbar = DebugToolbarExtension(app)
 # Configuracion de la base de datos (En local= SQLite)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tienda.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -184,6 +189,30 @@ def anadir_al_carrito(prod_id):
     # Lanzamos un mensaje de confirmación de un solo uso
     flash("Añadido producto al carrito", "exito")
 
+    return redirect(url_for("mostrar_catalogo"))
+
+
+# 2. Ver el contenido del carrito
+@app.route("/carrito")
+def ver_carrito():
+    # Obtenemos la lista de IDs (o una lista vacía si no hay carrito)
+    ids_carrito = session.get("carrito", [])
+
+    # Consultamos en la base de datos los productos cuyos IDs estén en la lista
+    if ids_carrito:
+        productos_carrito = Producto.query.filter(Producto.id.in_(ids_carrito)).all()
+    else:
+        productos_carrito = []
+
+    return render_template("carrito.html", productos=productos_carrito)
+
+
+# 3. Vaciar el carrito (vía POST)
+@app.route("/carrito/vaciar", methods=["POST"])
+def vaciar_carrito():
+    # Eliminamos únicamente la clave 'carrito' de la sesión
+    session.pop("carrito", None)
+    flash("Has vaciado tu carrito de la compra.", "info")
     return redirect(url_for("mostrar_catalogo"))
 
 

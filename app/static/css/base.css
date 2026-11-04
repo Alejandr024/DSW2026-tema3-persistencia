@@ -1,0 +1,23 @@
+body {
+  background-color: aliceblue;
+}
+
+.message {
+  box-shadow: 2px 2px 2px gray;
+  padding: 9px 12px;
+}
+
+.message.exito {
+  background-color: lightgreen;
+  color: rgb(202, 233, 202);
+}
+
+.message.error {
+  background-color: lightcoral;
+  color: rgb(128, 19, 0);
+}
+
+.message.info {
+  background-color: rgb(144, 238, 222);
+  color: rgb(16, 197, 182);
+}
