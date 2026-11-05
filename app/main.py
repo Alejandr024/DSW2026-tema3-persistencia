@@ -9,6 +9,7 @@ from flask import (
     make_response,
     session,
     flash,
+    abort,
 )
 from app.models import Usuario, db, Producto
 from app.forms import ProductoForm, RegistroForm, LoginForm
@@ -21,6 +22,7 @@ from flask_login import (
     login_required,
     current_user,
 )
+from functools import wraps
 
 app = Flask(__name__)
 app.debug = True
@@ -56,6 +58,23 @@ login_manager.login_message_category = "info"
 def cargar_usuario(user_id):
     """Recupera el objeto Usuario desde tienda.db a partir del ID guardado en la cookie session."""
     return db.session.get(Usuario, int(user_id))
+
+
+def admin_required(f):
+    """Decorador que restringe el acceso exclusivamente a usuarios con rol 'admin'."""
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # 1. Si es un visitante anónimo, lo enviamos al formulario de login
+        if not current_user.is_authenticated:
+            return login_manager.unauthorized()
+        # 2. Si está logueado pero NO es administrador, lanzamos error HTTP 403 (Prohibido)
+        if not current_user.es_admin:
+            abort(403)
+        # 3. Si es admin, ejecutamos la función de vista original con normalidad
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 
 with app.app_context():
@@ -96,6 +115,7 @@ def mostrar_catalogo():
 
 # 2. CREATE: Mostrar formulario y guardar un nuevo producto en la BD
 @app.route("/producto/nuevo", methods=["GET", "POST"])
+@admin_required
 def crear_producto():
     form = ProductoForm()
     if form.validate_on_submit():
@@ -130,6 +150,7 @@ def crear_producto():
 
 # 3. UPDATE: Recuperar un producto existente, rellenar el formulario y guardar cambios
 @app.route("/producto/<int:prod_id>/editar", methods=["GET", "POST"])
+@admin_required
 def editar_producto(prod_id):
     # Busca el producto por su clave primaria o lanza un error 404 si no existe
     producto = db.get_or_404(Producto, prod_id)
@@ -176,6 +197,7 @@ def editar_producto(prod_id):
 
 # 4. DELETE: Eliminar un producto de la BD (exclusivamente por POST, para que nadie elimine cualquier producto a partir de la barra de navegación)
 @app.route("/producto/<int:prod_id>/eliminar", methods=["POST"])
+@admin_required
 def eliminar_producto(prod_id):
     producto = db.get_or_404(Producto, prod_id)
     db.session.delete(producto)
@@ -202,6 +224,7 @@ def ver_producto(prod_id):
 
 
 @app.route("/carrito/anadir/<int:prod_id>", methods=["POST"])
+@login_required
 def anadir_al_carrito(prod_id):
     # Se puede hacer esto para mostrar el nombre, pero como el esacio del carrito es pequeño (4KB) solo guardamos el id del producto, y no hace falta este codigo
     # producto = db.get_or_404(Producto, prod_id)
@@ -226,6 +249,7 @@ def anadir_al_carrito(prod_id):
 
 # 2. Ver el contenido del carrito
 @app.route("/carrito")
+@login_required
 def ver_carrito():
     # Obtenemos la lista de IDs (o una lista vacía si no hay carrito)
     ids_carrito = session.get("carrito", [])
