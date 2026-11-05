@@ -216,5 +216,25 @@ def vaciar_carrito():
     return redirect(url_for("mostrar_catalogo"))
 
 
+# Eliminar un producto del carrito
+@app.route("/carrito/eliminar/<int:prod_id>", methods=["POST"])
+def eliminar_del_carrito(prod_id):
+    if "carrito" in session and prod_id in session["carrito"]:
+        # 1. Buscar el producto en la base de datos para obtener su nombre
+        producto = Producto.query.get(prod_id)
+        nombre_producto = producto.nombre if producto else "Producto desconocido"
+
+        # 2. Eliminar del carrito
+        session["carrito"].remove(prod_id)
+        session.modified = True
+
+        # 3. Usar una f-string (la 'f' antes de las comillas) para inyectar la variable
+        flash(
+            f"Has vaciado, de tu carrito, el producto siguiente: {nombre_producto}.",
+            "info",
+        )
+    return redirect(url_for("ver_carrito"))
+
+
 if __name__ == "__main__":
     app.run(debug=True)

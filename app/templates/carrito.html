@@ -10,6 +10,11 @@
     {% for prod in productos %}
     <li style="margin-bottom: 10px;">
         <strong>{{ prod.nombre }}</strong> — {{ prod.precio }} €
+        <form action="{{ url_for('eliminar_del_carrito', prod_id=prod.id) }}" method="post">
+            <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
+                Vaciar producto del Carrito
+            </button>
+        </form>
     </li>
     {% endfor %}
 </ul>
