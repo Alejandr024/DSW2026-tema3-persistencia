@@ -53,4 +53,4 @@ Thumbs.db
 # Imagenessubidas por el usuario
 # =========================
 
-app/static/img/uploads
+app/static/img/uploads/*
