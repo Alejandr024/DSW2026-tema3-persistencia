@@ -96,3 +96,27 @@ class LoginForm(FlaskForm):
     )
     remember = BooleanField("Mantener sesión iniciada")
     submit = SubmitField("Iniciar Sesión")
+
+
+class CambiarPassword(FlaskForm):
+    password_actual = PasswordField(
+        "Contraseña actual",
+        validators=[
+            DataRequired(message="Introduce tu contraseña."),
+        ],
+    )
+    new_password = PasswordField(
+        "Contraseña",
+        validators=[
+            DataRequired(message="La contraseña es obligatoria."),
+            Length(min=6, message="Mínimo 6 caracteres."),
+        ],
+    )
+    confirm_new_password = PasswordField(
+        "Confirmar Contraseña",
+        validators=[
+            DataRequired(message="Debes confirmar la contraseña."),
+            EqualTo("new_password", message="Las contraseñas no coinciden."),
+        ],
+    )
+    submit = SubmitField("Cambiar contraseña")

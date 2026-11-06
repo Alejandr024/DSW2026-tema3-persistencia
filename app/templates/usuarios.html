@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+
+{% block content %}
+<h2>Usuarios registrados</h2>
+<div style="border: 1px solid #ccc; padding: 15px; border-radius: 6px; max-width: 400px;">
+    {% for user in users %}
+    <p><strong>ID de Usuario:</strong> {{ user.id }}</p>
+    <p><strong>Nombre de usuario:</strong> {{ user.username }}</p>
+    <p><strong>Correo electrónico:</strong> {{ user.email }}</p>
+    <p>
+        <strong>Rol asignado:</strong>
+        {% if user.es_admin %}
+        <span
+        style="background-color: #dc3545; color: white; padding: 2px 6px; border-radius: 4px;">Administrador</span>
+        {% else %}
+        <span style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px;">Cliente</span>
+        {% endif %}
+    </p>
+    <form action="" method="post">
+        <a href="{{url_for('change_rol', user_id= user.id)}}">
+            <strong>Cambiar rol</strong>
+        </a>
+    </form>
+    {% endfor %}    
+{% endblock %}

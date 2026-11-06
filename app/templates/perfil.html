@@ -16,5 +16,38 @@
         <span style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px;">Cliente</span>
         {% endif %}
     </p>
+    <p>
+        <strong>Cambiar contraseña</strong>
+        <form action="" method="post" novalidate>
+            {{ passwd.hidden_tag() }}
+            <div style="margin-bottom: 10px;">
+                {{ passwd.password_actual.label }}<br>
+                {{ passwd.password_actual(size=32) }}<br>
+                {% for error in passwd.password_actual.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                {{ passwd.new_password.label }}<br>
+                {{ passwd.new_password(size=32) }}<br>
+                {% for error in passwd.new_password.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                {{ passwd.confirm_new_password.label }}<br>
+                {{ passwd.confirm_new_password(size=32) }}<br>
+                {% for error in passwd.confirm_new_password.errors %}
+                <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ passwd.submit() }}
+            </div>
+        </form>
+    </p>
 </div>
 {% endblock %}

@@ -12,7 +12,7 @@ from flask import (
     abort,
 )
 from app.models import Usuario, db, Producto
-from app.forms import ProductoForm, RegistroForm, LoginForm
+from app.forms import ProductoForm, RegistroForm, LoginForm, CambiarPassword
 from datetime import timedelta
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_login import (
@@ -349,15 +349,49 @@ def login():
 @login_required
 def logout():
     logout_user()  # Elimina el ID del usuario de la cookie session
+    session.pop("carrito", None)
     flash("Has cerrado sesión correctamente.", "info")
     return redirect(url_for("mostrar_catalogo"))
 
 
 # 4. PERFIL DEL USUARIO
-@app.route("/perfil")
+@app.route("/perfil", methods=["GET", "POST"])
 @login_required
 def perfil():
-    return render_template("perfil.html")
+    passwd = CambiarPassword()
+
+    if passwd.validate_on_submit():
+        if current_user.check_password(passwd.password_actual.data):
+            current_user.set_password(passwd.new_password.data)
+            db.session.commit()
+            flash("Contraseña cambiada con éxito", "exito")
+        else:
+            flash("La contraseña actual es incorrecta.", "error")
+    return render_template("perfil.html", passwd=passwd)
+
+
+@app.route("/admin/usuarios")
+@admin_required
+def users():
+    users_all = Usuario.query.all()
+
+    return render_template("usuarios.html", users=users_all)
+
+
+@app.route("/admin/usuario/<int:user_id>/cambiar-rol")
+@admin_required
+def change_rol(user_id):
+    # Pista de seguridad para cambiar_rol(user_id) dentro de app/main.py:
+    usuario = db.get_or_404(Usuario, user_id)
+
+    # Evitamos que el administrador actual se quite el permiso a sí mismo por accidente
+    if usuario.id == current_user.id:
+        flash("No puedes cambiar tu propio rol de administrador.", "error")
+    else:
+        usuario.rol = "admin" if usuario.rol == "cliente" else "cliente"
+        db.session.commit()
+        flash(f"Rol de {usuario.username} actualizado a {usuario.rol}.", "exito")
+    return redirect(url_for("users"))
 
 
 if __name__ == "__main__":
