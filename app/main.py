@@ -12,7 +12,7 @@ from flask import (
     abort,
 )
 from app.models import Usuario, db, Producto
-from app.forms import ProductoForm, RegistroForm, LoginForm
+from app.forms import ProductoForm, RegistroForm, LoginForm, CambiarPassword
 from datetime import timedelta
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_login import (
@@ -254,13 +254,26 @@ def ver_carrito():
     # Obtenemos la lista de IDs (o una lista vacía si no hay carrito)
     ids_carrito = session.get("carrito", [])
 
+    #Creamos la varibale para guardar el total a pagar del carrito
+    total = 0
+    #guardamos la cantidades de cada producto
+    cantidades = {}
     # Consultamos en la base de datos los productos cuyos IDs estén en la lista
     if ids_carrito:
         productos_carrito = Producto.query.filter(Producto.id.in_(ids_carrito)).all()
+        for prod in productos_carrito:
+            #contamos la cantidad en ese producto
+            cantidad = ids_carrito.count(prod.id)
+            #guardamos la cantidad
+            cantidades[prod.id] = cantidad
+            #sumamos su total al total a pagar
+            total += prod.precio * cantidad
     else:
         productos_carrito = []
 
-    return render_template("carrito.html", productos=productos_carrito)
+    return render_template(
+        "carrito.html", productos=productos_carrito, cantidades=cantidades, total=total
+    )
 
 
 # 3. Vaciar el carrito (vía POST)
@@ -349,15 +362,58 @@ def login():
 @login_required
 def logout():
     logout_user()  # Elimina el ID del usuario de la cookie session
+    session.pop("carrito", None)
     flash("Has cerrado sesión correctamente.", "info")
     return redirect(url_for("mostrar_catalogo"))
 
 
 # 4. PERFIL DEL USUARIO
-@app.route("/perfil")
+@app.route("/perfil", methods=["GET", "POST"])
 @login_required
 def perfil():
-    return render_template("perfil.html")
+    passwd = CambiarPassword()
+
+    if passwd.validate_on_submit():
+        if current_user.check_password(passwd.password_actual.data):
+            current_user.set_password(passwd.new_password.data)
+            db.session.commit()
+            flash("Contraseña cambiada con éxito", "exito")
+        else:
+            flash("La contraseña actual es incorrecta.", "error")
+    return render_template("perfil.html", passwd=passwd)
+
+
+@app.route("/admin/usuarios")
+@admin_required
+def users():
+    users_all = Usuario.query.all()
+
+    return render_template("usuarios.html", users=users_all)
+
+
+@app.route("/admin/usuario/<int:user_id>/cambiar-rol")
+@admin_required
+def change_rol(user_id):
+    # Pista de seguridad para cambiar_rol(user_id) dentro de app/main.py:
+    usuario = db.get_or_404(Usuario, user_id)
+
+    # Evitamos que el administrador actual se quite el permiso a sí mismo por accidente
+    if usuario.id == current_user.id:
+        flash("No puedes cambiar tu propio rol de administrador.", "error")
+    else:
+        usuario.rol = "admin" if usuario.rol == "cliente" else "cliente"
+        db.session.commit()
+        flash(f"Rol de {usuario.username} actualizado a {usuario.rol}.", "exito")
+    return redirect(url_for("users"))
+
+@app.route("/tema/<string:modo>")
+def cambiar_tema(modo):
+    if modo not in ("claro", "oscuro"):
+        abort(404)
+
+    respuesta = make_response(redirect(url_for("mostrar_catalogo")))
+    respuesta.set_cookie("tema", modo, max_age=30 * 24 * 60 * 60)
+    return respuesta
 
 
 if __name__ == "__main__":

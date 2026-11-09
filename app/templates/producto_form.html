@@ -10,43 +10,42 @@
     <!-- Token oculto obligatorio contra ataques CSRF -->
     {{ form.hidden_tag() }}
 
-    <div style="margin-bottom: 10px;">
+    <div class="form-field">
         {{ form.nombre.label }}<br>
         {{ form.nombre(size=40) }}<br>
         {% for error in form.nombre.errors %}
-        <span style="color: red;">{{ error }}</span>
+        <span class="error-text">{{ error }}</span>
         {% endfor %}
     </div>
 
-    <div style="margin-bottom: 10px;">
+    <div class="form-field">
         {{ form.precio.label }}<br>
         {{ form.precio() }}<br>
         {% for error in form.precio.errors %}
-        <span style="color: red;">{{ error }}</span>
+        <span class="error-text">{{ error }}</span>
         {% endfor %}
     </div>
 
-    <div style="margin-bottom: 15px;">
+    <div class="form-field-spaced">
         {{ form.disponible() }} {{ form.disponible.label }}
     </div>
 
-    <div style="margin-bottom: 15px;">
+    <div class="form-field-spaced">
         {{form.archivo_imagen.label}}
         {% if producto and producto.imagen %}
-        <img src="{{url_for('static', filename='img/uploads/' + producto.imagen)}}" alt="{{producto.nombre}}"
-            width="100">
+        <img src="{{url_for('static', filename='img/uploads/' + producto.imagen)}}" alt="{{producto.nombre}}" width="100">
         {% else %}
         <span>(No hay imagen)</span>
         {% endif %}
         {{form.archivo_imagen() }}
         <span>Sube un archivo si quieres modificar la imagen</span>
         {% for error in form.archivo_imagen.errors %}
-        <span style="color: red;">{{ error }}</span>
+        <span class="error-text">{{ error }}</span>
         {% endfor %}
     </div>
     <div>
         {{ form.submit() }}
-        <a href="{{ url_for('mostrar_catalogo') }}" style="margin-left: 10px;">Cancelar</a>
+        <a href="{{ url_for('mostrar_catalogo') }}" class="cancel-link">Cancelar</a>
     </div>
 </form>
 {% endblock %}

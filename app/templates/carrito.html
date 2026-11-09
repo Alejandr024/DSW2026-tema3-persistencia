@@ -8,20 +8,21 @@
 {% if productos %}
 <ul>
     {% for prod in productos %}
-    <li style="margin-bottom: 10px;">
-        <strong>{{ prod.nombre }}</strong> — {{ prod.precio }} €
+    <li class="cart-item">
+        <strong>{{ prod.nombre }}</strong> — {{ "%.2f"|format(prod.precio) }} € (x{{ cantidades[prod.id] }} uds) = {{ "%.2f"|format(prod.precio * cantidades[prod.id]) }} €
         <form action="{{ url_for('eliminar_del_carrito', prod_id=prod.id) }}" method="post">
-            <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
+            <button type="submit" class="button-danger">
                 Vaciar producto del Carrito
             </button>
         </form>
     </li>
     {% endfor %}
+    <strong>Total a pagar: </strong> {{ total }} €
 </ul>
 
-<form action="{{ url_for('vaciar_carrito') }}" method="post" style="margin-top: 20px;">
+<form action="{{ url_for('vaciar_carrito') }}" method="post" class="cart-actions">
     <button type="submit"
-        style="background-color: #dc3545; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">
+        class="button-danger">
         Vaciar Carrito
     </button>
 </form>
@@ -29,7 +30,7 @@
 <p>Tu carrito está vacío en este momento.</p>
 {% endif %}
 
-<p style="margin-top: 20px;">
-    <a href="{{ url_for('mostrar_catalogo') }}">← Seguir comprando</a>
+<p class="cart-actions">
+    <a href="{{ url_for('mostrar_catalogo') }}" class="cart-back-link">← Seguir comprando</a>
 </p>
 {% endblock %}
