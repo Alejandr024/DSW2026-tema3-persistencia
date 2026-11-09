@@ -3,7 +3,7 @@
 
 {% block content %}
 <h2>Usuarios registrados</h2>
-<div style="border: 1px solid #ccc; padding: 15px; border-radius: 6px; max-width: 400px;">
+<div class="user-card">
     {% for user in users %}
     <p><strong>ID de Usuario:</strong> {{ user.id }}</p>
     <p><strong>Nombre de usuario:</strong> {{ user.username }}</p>
@@ -12,9 +12,9 @@
         <strong>Rol asignado:</strong>
         {% if user.es_admin %}
         <span
-        style="background-color: #dc3545; color: white; padding: 2px 6px; border-radius: 4px;">Administrador</span>
+        class="role-badge role-admin">Administrador</span>
         {% else %}
-        <span style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px;">Cliente</span>
+        <span class="role-badge role-client">Cliente</span>
         {% endif %}
     </p>
     <form action="" method="post">
