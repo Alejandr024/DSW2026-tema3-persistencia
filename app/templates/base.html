@@ -7,38 +7,39 @@
         <title>{% block title %}Mi Tienda Flask{% endblock %}</title>
         <link rel="stylesheet" href="{{url_for('static', filename='/css/base.css')}}">
     </head>
-    
+
     <body class="{{ 'tema-oscuro' if request.cookies.get('tema') == 'oscuro' else ''}}">
         <nav>
             <div>
-                <a href="{{ url_for('mostrar_catalogo') }}">Catálogo de Productos</a>
+                <a href="{{ url_for('public.mostrar_catalogo') }}">Catálogo de Productos</a>
 
                 <!-- Solo el administrador ve el enlace de alta en el menú superior -->
                 {% if current_user.is_authenticated and current_user.es_admin %}
-                | <a href="{{ url_for('crear_producto') }}">+ Nuevo Producto</a>
+                | <a href="{{ url_for('admin.crear_producto') }}">+ Nuevo Producto</a>
                 {% endif %}
 
                 <!-- Solo los usuarios autenticados ven su carrito en la barra -->
                 {% if current_user.is_authenticated %}
-                | <a href="{{ url_for('ver_carrito') }}">
+                | <a href="{{ url_for('public.ver_carrito') }}">
                     🛒 Ver Carrito ({{ session.get('carrito', []) | length }})
                 </a>
                 {% endif %}
                 {% if current_user.es_admin %}
-                | <a href="{{url_for('users')}}">Usuarios registrados</a>
+                | <a href="{{url_for('admin.users')}}">Usuarios registrados</a>
                 {% endif %}
-                <a href="{{ url_for('cambiar_tema', modo='claro') }}">☀️ Modo Claro</a>
+
+                <a href="{{ url_for('public.cambiar_tema', modo='claro') }}">☀️ Modo Claro</a>
                 |
-                <a href="{{ url_for('cambiar_tema', modo='oscuro') }}">🌙 Modo Oscuro</a>
+                <a href="{{ url_for('public.cambiar_tema', modo='oscuro') }}">🌙 Modo Oscuro</a>
             </div>
             <div>
                 {% if current_user.is_authenticated %}
                 <span>Hola, <strong>{{ current_user.username }}</strong> ({{ current_user.rol }})</span> |
-                <a href="{{ url_for('perfil') }}">Mi Perfil</a> |
-                <a href="{{ url_for('logout') }}" class="link-logout">Cerrar Sesión</a>
+                <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a> |
+                <a href="{{ url_for('auth.logout') }}" class="link-logout">Cerrar Sesión</a>
                 {% else %}
-                <a href="{{ url_for('login') }}">Iniciar Sesión</a> |
-                <a href="{{ url_for('registro') }}">Registrarse</a>
+                <a href="{{ url_for('auth.login') }}">Iniciar Sesión</a> |
+                <a href="{{ url_for('auth.registro') }}">Registrarse</a>
                 {% endif %}
             </div>
             <hr>

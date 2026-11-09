@@ -11,16 +11,15 @@
     <p>
         <strong>Rol asignado:</strong>
         {% if user.es_admin %}
-        <span
-        class="role-badge role-admin">Administrador</span>
+        <span class="role-badge role-admin">Administrador</span>
         {% else %}
         <span class="role-badge role-client">Cliente</span>
         {% endif %}
     </p>
     <form action="" method="post">
-        <a href="{{url_for('change_rol', user_id= user.id)}}">
+        <a href="{{url_for('admin.change_rol', user_id= user.id)}}">
             <strong>Cambiar rol</strong>
         </a>
     </form>
-    {% endfor %}    
-{% endblock %}
+    {% endfor %}
+    {% endblock %}

@@ -9,7 +9,7 @@
 
 <!-- Solo el administrador ve el botón superior de crear producto -->
 {% if current_user.is_authenticated and current_user.es_admin %}
-<p><a href="{{ url_for('crear_producto') }}">+ Añadir nuevo producto</a></p>
+<p><a href="{{ url_for('admin.crear_producto') }}">+ Añadir nuevo producto</a></p>
 {% endif %}
 
 <ul>
@@ -20,14 +20,15 @@
         {% else %}
         <span class="no-image">[No Imagen]</span>
         {% endif %}
-        <a href="{{url_for('ver_producto', prod_id= prod.id)}}">
+        <a href="{{url_for('public.ver_producto', prod_id= prod.id)}}">
             <strong>{{ prod.nombre }}</strong>
         </a>
         - {{ prod.precio }} €
         {% if prod.disponible %}
         <span class="in-stock">(En stock)</span>
         {% if current_user.is_authenticated %}
-        <form action="{{ url_for('anadir_al_carrito', prod_id=prod.id) }}" method="post" class="inline-form add-cart-form">
+        <form action="{{ url_for('public.anadir_al_carrito', prod_id=prod.id) }}" method="post"
+            class="inline-form add-cart-form">
             <button type="submit" class="button-success">
                 + Añadir al carrito
             </button>
@@ -40,10 +41,11 @@
         <!-- Enlace GET para ir al formulario de edición -->
         <!-- Controles CRUD exclusivos para el rol 'admin' -->
         {% if current_user.is_authenticated and current_user.es_admin %}
-        | <a href="{{ url_for('editar_producto', prod_id=prod.id) }}">Editar</a>
+        | <a href="{{ url_for('admin.editar_producto', prod_id=prod.id) }}">Editar</a>
 
         <!-- Formulario POST para eliminar el registro de forma segura -->
-        <form action="{{ url_for('eliminar_producto', prod_id=prod.id) }}" method="post" class="inline-form delete-form">
+        <form action="{{ url_for('admin.eliminar_producto', prod_id=prod.id) }}" method="post"
+            class="inline-form delete-form">
             <button type="submit" onclick="return confirm('¿Seguro que deseas eliminar {{ prod.nombre }}?');">
                 Eliminar
             </button>
