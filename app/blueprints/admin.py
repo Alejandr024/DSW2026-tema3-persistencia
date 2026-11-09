@@ -103,7 +103,7 @@ def users():
     return render_template("usuarios.html", users=users_all)
 
 
-@admin_bp.route("/admin/usuario/<int:user_id>/cambiar-rol")
+@admin_bp.route("/admin/usuario/<int:user_id>/cambiar-rol", methods=["POST"])
 def change_rol(user_id):
     # Pista de seguridad para cambiar_rol(user_id) dentro de app/main.py:
     usuario = db.get_or_404(Usuario, user_id)
@@ -115,11 +115,4 @@ def change_rol(user_id):
         usuario.rol = "admin" if usuario.rol == "cliente" else "cliente"
         db.session.commit()
         flash(f"Rol de {usuario.username} actualizado a {usuario.rol}.", "exito")
-    return redirect(url_for("users"))
-
-
-"""
-
-
-
-"""
+    return redirect(url_for("admin.users"))

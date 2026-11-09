@@ -59,7 +59,7 @@ def logout():
     return redirect(url_for("public.mostrar_catalogo"))
 
 
-@auth_bp.route("/perfil")
+@auth_bp.route("/perfil", methods=["GET", "POST"])
 @login_required
 def perfil():
     passwd = CambiarPassword()
@@ -72,21 +72,3 @@ def perfil():
         else:
             flash("La contraseña actual es incorrecta.", "error")
     return render_template("perfil.html", passwd=passwd)
-
-
-"""
-# 4. PERFIL DEL USUARIO
-@app.route("/perfil", methods=["GET", "POST"])
-@login_required
-def perfil():
-    passwd = CambiarPassword()
-
-    if passwd.validate_on_submit():
-        if current_user.check_password(passwd.password_actual.data):
-            current_user.set_password(passwd.new_password.data)
-            db.session.commit()
-            flash("Contraseña cambiada con éxito", "exito")
-        else:
-            flash("La contraseña actual es incorrecta.", "error")
-    return render_template("perfil.html", passwd=passwd)
-"""

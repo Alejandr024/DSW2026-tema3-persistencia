@@ -8,6 +8,7 @@ from flask import (
     request,
     session,
     url_for,
+    abort,
 )
 from flask_login import login_required
 from app.models import db, Producto
@@ -63,9 +64,10 @@ def anadir_al_carrito(prod_id):
     session.permanent = True
     if "carrito" not in session:
         session["carrito"] = []
-    session["carrito"].append(producto.id)
-    session.modified = True
-    flash(f"¡{producto.nombre} añadido al carrito!", "exito")
+        if producto.disponible:
+            session["carrito"].append(producto.id)
+            session.modified = True
+            flash(f"¡{producto.nombre} añadido al carrito!", "exito")
     return redirect(url_for("public.mostrar_catalogo"))
 
 
@@ -73,11 +75,46 @@ def anadir_al_carrito(prod_id):
 @login_required
 def ver_carrito():
     ids_carrito = session.get("carrito", [])
+    # Creamos la varibale para guardar el total a pagar del carrito
+    total = 0
+    # guardamos la cantidades de cada producto
+    cantidades = {}
+    # Consultamos en la base de datos los productos cuyos IDs estén en la lista
     if ids_carrito:
         productos_carrito = Producto.query.filter(Producto.id.in_(ids_carrito)).all()
+        for prod in productos_carrito:
+            # contamos la cantidad en ese producto
+            cantidad = ids_carrito.count(prod.id)
+            # guardamos la cantidad
+            cantidades[prod.id] = cantidad
+            # sumamos su total al total a pagar
+            total += prod.precio * cantidad
     else:
         productos_carrito = []
-    return render_template("carrito.html", productos=productos_carrito)
+    return render_template(
+        "carrito.html", productos=productos_carrito, total=total, cantidades=cantidades
+    )
+
+
+# Eliminar un producto del carrito
+@public_bp.route("/carrito/eliminar/<int:prod_id>", methods=["POST"])
+@login_required
+def eliminar_del_carrito(prod_id):
+    if "carrito" in session and prod_id in session["carrito"]:
+        # 1. Buscar el producto en la base de datos para obtener su nombre
+        producto = Producto.query.get(prod_id)
+        nombre_producto = producto.nombre if producto else "Producto desconocido"
+
+        # 2. Eliminar del carrito
+        session["carrito"].remove(prod_id)
+        session.modified = True
+
+        # 3. Usar una f-string (la 'f' antes de las comillas) para inyectar la variable
+        flash(
+            f"Has vaciado, de tu carrito, el producto siguiente: {nombre_producto}.",
+            "info",
+        )
+    return redirect(url_for("public.ver_carrito"))
 
 
 @public_bp.route("/carrito/vaciar", methods=["POST"])
@@ -91,7 +128,7 @@ def vaciar_carrito():
 @public_bp.route("/tema/<string:modo>")
 def cambiar_tema(modo):
     if modo not in ("claro", "oscuro"):
-        return 0
+        return abort(404)
 
     respuesta = make_response(redirect(url_for("public.mostrar_catalogo")))
     respuesta.set_cookie("tema", modo, max_age=30 * 24 * 60 * 60)

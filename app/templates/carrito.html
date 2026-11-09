@@ -10,7 +10,7 @@
     {% for prod in productos %}
     <li class="cart-item">
         <strong>{{ prod.nombre }}</strong> — {{ "%.2f"|format(prod.precio) }} € (x{{ cantidades[prod.id] }} uds) = {{ "%.2f"|format(prod.precio * cantidades[prod.id]) }} €
-        <form action="{{ url_for('eliminar_del_carrito', prod_id=prod.id) }}" method="post">
+        <form action="{{ url_for('public.eliminar_del_carrito', prod_id=prod.id) }}" method="post">
             <button type="submit" class="button-danger">
                 Vaciar producto del Carrito
             </button>
@@ -20,7 +20,7 @@
     <strong>Total a pagar: </strong> {{ total }} €
 </ul>
 
-<form action="{{ url_for('vaciar_carrito') }}" method="post" class="cart-actions">
+<form action="{{ url_for('public.vaciar_carrito') }}" method="post" class="cart-actions">
     <button type="submit"
         class="button-danger">
         Vaciar Carrito
@@ -31,6 +31,6 @@
 {% endif %}
 
 <p class="cart-actions">
-    <a href="{{ url_for('mostrar_catalogo') }}" class="cart-back-link">← Seguir comprando</a>
+    <a href="{{ url_for('public.mostrar_catalogo') }}" class="cart-back-link">← Seguir comprando</a>
 </p>
 {% endblock %}
